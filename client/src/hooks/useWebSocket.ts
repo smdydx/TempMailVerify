@@ -17,6 +17,11 @@ export function useWebSocket(url: string): WebSocketHook {
   // Initialize WebSocket connection
   const connectWebSocket = useCallback(() => {
     try {
+      // Force close existing connection if any
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      
       const ws = new WebSocket(url);
       wsRef.current = ws;
       setConnectionStatus('connecting');
