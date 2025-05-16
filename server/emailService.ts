@@ -9,25 +9,18 @@ export interface EmailServiceInterface {
 
 export class EmailService implements EmailServiceInterface {
   private static readonly emailProviders = [
-    { name: "Amazon Verification", email: "noreply@amazon.com" },
-    { name: "Google Account Verification", email: "no-reply@accounts.google.com" },
-    { name: "Facebook Security Alert", email: "security@mail.facebook.com" },
-    { name: "Twitter Verification", email: "verify@twitter.com" },
-    { name: "PayPal Security", email: "service@paypal.com" },
-    { name: "Instagram Verification", email: "security@mail.instagram.com" },
-    { name: "Apple ID Verification", email: "do_not_reply@apple.com" },
-    { name: "Microsoft Account Security", email: "account-security-noreply@microsoft.com" },
+    { name: "Replit Account Verification", email: "noreply@replit.com" },
+    { name: "Replit Security", email: "security@replit.com" },
+    { name: "Replit Auth", email: "auth@replit.com" },
+    { name: "Replit ID", email: "id@replit.com" },
   ];
 
   private static readonly otpVerificationTemplates = [
-    "Your verification code is: {OTP}. Please use this code to verify your account.",
-    "Your {SERVICE} verification code is: {OTP}. This code will expire in 10 minutes.",
-    "Use {OTP} as your security code for {SERVICE}. Do not share this code with anyone.",
-    "{SERVICE} confirmation code: {OTP}. Use this code to complete your sign-in.",
-    "Your one-time password for {SERVICE} is {OTP}. This code is valid for 5 minutes only.",
-    "Your {SERVICE} security code is {OTP}. Please enter this code to continue.",
-    "{OTP} is your {SERVICE} authentication code. For security reasons, please do not share this code.",
-    "Enter {OTP} to verify your identity on {SERVICE}. This code expires soon."
+    "Your Replit verification code is: {OTP}. Use this to verify your account.",
+    "Welcome to Replit! Your verification code is {OTP}. This code expires in 10 minutes.",
+    "Use code {OTP} to verify your Replit account. Don't share this code.",
+    "Your Replit security code: {OTP}. Enter this to complete verification.",
+    "Here's your Replit authentication code: {OTP}. Valid for 5 minutes."
   ];
 
   private static readonly websockets = new Set<any>();
