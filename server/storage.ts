@@ -17,7 +17,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   getMessagesByEmailId(emailId: number): Promise<Message[]>;
   getMessageById(id: number): Promise<Message | undefined>;
-  markMessageAsRead(id: number): Promise<boolean>;
+  markMessageAsRead(id: number): Promise<Message | undefined>;
   deleteMessage(id: number): Promise<boolean>;
 }
 
@@ -51,12 +51,19 @@ class Storage implements IStorage {
 
   async createMessage(messageData: InsertMessage): Promise<Message> {
     const collection = this.db.collection('messages');
-    const result = await collection.insertOne({
-      ...messageData,
-      receivedAt: new Date(),
-      isRead: false
-    });
-    return { id: result.insertedId.toString(), ...messageData, receivedAt: new Date(), isRead: false };
+    try {
+      console.log("Attempting to create message:", messageData);
+      const result = await collection.insertOne({
+        ...messageData,
+        receivedAt: new Date(),
+        isRead: false
+      });
+      console.log("Message created successfully:", result);
+      return { id: result.insertedId.toString(), ...messageData, receivedAt: new Date(), isRead: false };
+    } catch (error) {
+      console.error("Error creating message:", error);
+      throw error; // re-throw the error to be handled upstream
+    }
   }
 
   async getMessagesByEmailId(emailId: number): Promise<Message[]> {

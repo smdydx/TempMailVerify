@@ -20,6 +20,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Handle WebSocket connections
   wss.on('connection', (ws) => {
     console.log('Client connected to WebSocket');
+    console.log('Total active WebSocket connections:', wss.clients.size);
     
     // Add the websocket to our collection
     EmailService.addWebSocket(ws);
