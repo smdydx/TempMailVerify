@@ -6,6 +6,7 @@ import { ssoEmailService } from "./ssoEmailService";
 import { z } from "zod";
 import { insertTempEmailSchema } from "@shared/schema";
 import { WebSocketServer } from "ws";
+import { isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
@@ -21,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws) => {
     console.log('Client connected to WebSocket');
     console.log('Total active WebSocket connections:', wss.clients.size);
-    
+
     // Add the websocket to our collection
     EmailService.addWebSocket(ws);
 
@@ -30,16 +31,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       type: 'CONNECTION_STATUS',
       status: 'connected'
     }));
-    
+
     // Send a connection acknowledgment
     ws.send(JSON.stringify({ type: 'CONNECTED' }));
-    
+
     // Handle WebSocket messages
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
         console.log('Received WebSocket message:', data);
-        
+
         // Handle different message types
         if (data.type === 'SUBSCRIBE_EMAIL') {
           console.log('Subscribing to email:', data.emailAddress);
@@ -48,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'SUBSCRIBED', 
             emailAddress: data.emailAddress 
           }));
-          
+
           // Send more verification messages with shorter delays
           for(let i = 0; i < 5; i++) {
             try {
@@ -57,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 emailService.simulateEmailReception(data.emailAddress),
                 ssoEmailService.simulateSSOVerification(data.emailAddress)
               ]);
-              
+
               messages.forEach(msg => {
                 if(msg) {
                   ws.send(JSON.stringify({
@@ -80,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }));
       }
     });
-    
+
     // Handle WebSocket disconnections
     ws.on('close', () => {
       console.log('Client disconnected from WebSocket');
@@ -90,17 +91,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API Routes
   // Get or generate a temporary email (Gmail style)
-  app.post('/api/email/generate', async (req, res) => {
+  app.get('/api/email/generate', isAuthenticated, async (req, res) => {
     try {
-      const newEmailAddress = emailService.generateRandomEmail();
-      const tempEmailData = { address: newEmailAddress };
-      
+      const user = req.user as any;
+      const tempEmailData = { address: user.claims?.email };
+
       // Validate the generated email address with zod schema
       const validatedData = insertTempEmailSchema.parse(tempEmailData);
-      
+
       // Create the temp email in storage
       const tempEmail = await storage.createTempEmail(validatedData);
-      
+
       return res.status(201).json({
         success: true,
         email: tempEmail
@@ -113,19 +114,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Generate an SSO-compatible email
   app.post('/api/email/generate-sso', async (req, res) => {
     try {
       const newEmailAddress = ssoEmailService.generateSSOEmail();
       const tempEmailData = { address: newEmailAddress };
-      
+
       // Validate the generated email address with zod schema
       const validatedData = insertTempEmailSchema.parse(tempEmailData);
-      
+
       // Create the temp email in storage
       const tempEmail = await storage.createTempEmail(validatedData);
-      
+
       return res.status(201).json({
         success: true,
         email: tempEmail
@@ -143,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/email/:address/messages', async (req, res) => {
     try {
       const { address } = req.params;
-      
+
       // Find the email by address
       const tempEmail = await storage.getTempEmailByAddress(address);
       if (!tempEmail) {
@@ -152,10 +153,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: 'Email address not found'
         });
       }
-      
+
       // Get all messages for this email
       const messages = await storage.getMessagesByEmailId(tempEmail.id);
-      
+
       return res.status(200).json({
         success: true,
         messages
@@ -174,14 +175,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const messageId = parseInt(id, 10);
-      
+
       if (isNaN(messageId)) {
         return res.status(400).json({
           success: false,
           message: 'Invalid message ID'
         });
       }
-      
+
       const updatedMessage = await storage.markMessageAsRead(messageId);
       if (!updatedMessage) {
         return res.status(404).json({
@@ -189,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: 'Message not found'
         });
       }
-      
+
       return res.status(200).json({
         success: true,
         message: updatedMessage
@@ -210,9 +211,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailAddress: z.string().email(),
         type: z.enum(['normal', 'sso']).optional()
       });
-      
+
       const { emailAddress, type = 'normal' } = schema.parse(req.body);
-      
+
       // Simulate receiving an email based on type
       let message;
       if (type === 'sso') {
@@ -220,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         message = await emailService.simulateEmailReception(emailAddress);
       }
-      
+
       return res.status(201).json({
         success: true,
         message
