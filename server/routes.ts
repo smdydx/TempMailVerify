@@ -24,6 +24,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Add the websocket to our collection
     EmailService.addWebSocket(ws);
+
+    // Send initial connection success message
+    ws.send(JSON.stringify({
+      type: 'CONNECTION_STATUS',
+      status: 'connected'
+    }));
     
     // Send a connection acknowledgment
     ws.send(JSON.stringify({ type: 'CONNECTED' }));

@@ -46,9 +46,15 @@ export class EmailService implements EmailServiceInterface {
 
   // Broadcast to all connected websockets
   private static broadcast(data: any) {
+    console.log('Broadcasting message:', data);
     this.websockets.forEach(ws => {
-      if (ws.readyState === 1) { // 1 = OPEN
-        ws.send(JSON.stringify(data));
+      try {
+        if (ws.readyState === 1) { // 1 = OPEN
+          ws.send(JSON.stringify(data));
+          console.log('Message sent successfully to a client');
+        }
+      } catch (error) {
+        console.error('Error broadcasting message:', error);
       }
     });
   }
