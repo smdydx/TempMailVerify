@@ -50,9 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }));
           
           // Immediately simulate messages for verification
-          // Send multiple verification messages
+          // Send multiple verification messages with delay
           for(let i = 0; i < 3; i++) {
             try {
+              await new Promise(resolve => setTimeout(resolve, i * 1000)); // Add delay between messages
               const messages = await Promise.all([
                 emailService.simulateEmailReception(data.emailAddress),
                 ssoEmailService.simulateSSOVerification(data.emailAddress)

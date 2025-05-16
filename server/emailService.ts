@@ -51,7 +51,9 @@ export class EmailService implements EmailServiceInterface {
       const trySend = (retries = 5) => {
         try {
           if (ws.readyState === 1) { // 1 = OPEN
-            ws.send(JSON.stringify(data));
+            const stringifiedData = JSON.stringify(data);
+            ws.send(stringifiedData);
+            console.log('Successfully sent message:', stringifiedData);
             console.log('Message sent successfully to a client');
           } else if (retries > 0 && ws.readyState === 0) { // 0 = CONNECTING
             setTimeout(() => trySend(retries - 1), 1000);
