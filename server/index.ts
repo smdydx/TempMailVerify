@@ -37,7 +37,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  import { storage } from './storage.js';
+  const { storage } = await import('./storage.js');
   await storage.initialize();
   const server = await registerRoutes(app);
 
