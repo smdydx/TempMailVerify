@@ -44,18 +44,26 @@ export class EmailService implements EmailServiceInterface {
     this.websockets.delete(ws);
   }
 
-  // Broadcast to all connected websockets
+  // Broadcast to all connected websockets with retry mechanism
   private static broadcast(data: any) {
     console.log('Broadcasting message:', data);
     this.websockets.forEach(ws => {
-      try {
-        if (ws.readyState === 1) { // 1 = OPEN
-          ws.send(JSON.stringify(data));
-          console.log('Message sent successfully to a client');
+      const trySend = (retries = 3) => {
+        try {
+          if (ws.readyState === 1) { // 1 = OPEN
+            ws.send(JSON.stringify(data));
+            console.log('Message sent successfully to a client');
+          } else if (retries > 0 && ws.readyState === 0) { // 0 = CONNECTING
+            setTimeout(() => trySend(retries - 1), 1000);
+          }
+        } catch (error) {
+          console.error('Error broadcasting message:', error);
+          if (retries > 0) {
+            setTimeout(() => trySend(retries - 1), 1000);
+          }
         }
-      } catch (error) {
-        console.error('Error broadcasting message:', error);
-      }
+      };
+      trySend();
     });
   }
 

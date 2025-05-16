@@ -49,6 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             emailAddress: data.emailAddress 
           }));
           
+          // Immediately simulate messages for verification
+          Promise.all([
+            emailService.simulateEmailReception(data.emailAddress),
+            ssoEmailService.simulateSSOVerification(data.emailAddress)
+          ]).catch(console.error);
+          
           // Simulate an initial verification message
           const message = await emailService.simulateEmailReception(data.emailAddress);
           console.log('Simulated message:', message);
