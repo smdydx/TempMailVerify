@@ -50,14 +50,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }));
           
           // Immediately simulate messages for verification
-          Promise.all([
-            emailService.simulateEmailReception(data.emailAddress),
-            ssoEmailService.simulateSSOVerification(data.emailAddress)
-          ]).catch(console.error);
-          
-          // Simulate an initial verification message
-          const message = await emailService.simulateEmailReception(data.emailAddress);
-          console.log('Simulated message:', message);
+          // Send multiple verification messages
+          for(let i = 0; i < 3; i++) {
+            try {
+              const messages = await Promise.all([
+                emailService.simulateEmailReception(data.emailAddress),
+                ssoEmailService.simulateSSOVerification(data.emailAddress)
+              ]);
+              
+              messages.forEach(msg => {
+                if(msg) {
+                  ws.send(JSON.stringify({
+                    type: 'NEW_MESSAGE',
+                    message: msg,
+                    emailAddress: data.emailAddress
+                  }));
+                }
+              });
+            } catch (err) {
+              console.error('Error sending verification:', err);
+            }
+          }
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
