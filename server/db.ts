@@ -1,7 +1,7 @@
 
 import { MongoClient } from 'mongodb';
 
-const url = "mongodb+srv://samadalamofficialcampus40:root@cluster0.rbabfhi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0&ssl=true&tls=true";
+const url = "mongodb+srv://samadalamofficialcampus40:root@cluster0.neoxtot.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const client = new MongoClient(url);
 
 export async function connectDB() {
