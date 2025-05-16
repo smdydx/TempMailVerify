@@ -150,9 +150,11 @@ export class EmailService implements EmailServiceInterface {
   // Simulate receiving an email for a specific address
   async simulateEmailReception(emailAddress: string) {
     try {
+      console.log('Simulating email reception for:', emailAddress);
       // Get or create the email address
       let tempEmail = await storage.getTempEmailByAddress(emailAddress);
       if (!tempEmail) {
+        console.log('Creating new temp email');
         tempEmail = await storage.createTempEmail({ address: emailAddress });
       }
 

@@ -38,14 +38,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
+        console.log('Received WebSocket message:', data);
         
         // Handle different message types
         if (data.type === 'SUBSCRIBE_EMAIL') {
+          console.log('Subscribing to email:', data.emailAddress);
           // Client is subscribing to updates for this email
           ws.send(JSON.stringify({ 
             type: 'SUBSCRIBED', 
             emailAddress: data.emailAddress 
           }));
+          
+          // Simulate an initial verification message
+          const message = await emailService.simulateEmailReception(data.emailAddress);
+          console.log('Simulated message:', message);
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
