@@ -1,15 +1,20 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
-
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import 'dotenv/config';
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+// Helper to get domains safely
+function getReplitDomains(): string[] {
+  const domains = process.env.REPLIT_DOMAINS;
+  if (!domains) {
+    throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  }
+  return domains.split(",");
 }
 
 const getOidcConfig = memoize(
@@ -86,8 +91,7 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  for (const domain of getReplitDomains()) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,

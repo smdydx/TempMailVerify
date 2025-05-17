@@ -27,8 +27,15 @@ export default function EmailGenerator({
       const endpoint = emailType === 'sso' 
         ? '/api/email/generate-sso'
         : '/api/email/generate';
-        
       const response = await apiRequest('POST', endpoint, {});
+      if (!response.ok) {
+        let errorMsg = "Failed to generate email address. Please try again.";
+        try {
+          const errData = await response.json();
+          errorMsg = errData.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
       const data = await response.json();
       return data;
     },
@@ -36,12 +43,18 @@ export default function EmailGenerator({
       if (data.success && data.email) {
         setCurrentEmail(data.email.address);
         onGenerate();
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to generate email address.",
+          variant: "destructive",
+        });
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to generate email address. Please try again.",
+        description: error.message || "Failed to generate email address. Please try again.",
         variant: "destructive",
       });
       console.error('Error generating email:', error);
